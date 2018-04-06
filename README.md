@@ -5,3 +5,5 @@
 [![Coverage Status](https://coveralls.io/repos/kleinschmidt/Grabbit.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/kleinschmidt/Grabbit.jl?branch=master)
 
 [![codecov.io](http://codecov.io/github/kleinschmidt/Grabbit.jl/coverage.svg?branch=master)](http://codecov.io/github/kleinschmidt/Grabbit.jl?branch=master)
+
+Based on python [grabbit](https://github.com/grabbles/grabbit).
