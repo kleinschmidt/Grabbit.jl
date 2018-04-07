@@ -1,0 +1,17 @@
+{
+  "name": "stamps",
+  "entities": [
+    {
+      "name": "name",
+      "pattern": "name=(.*?)\\#"
+    },
+    {
+      "name": "value",
+      "pattern": "value=(\\d+)\\#"
+    },
+    {
+      "name": "country",
+      "pattern": "country=(.*?)\\.txt"
+    }
+  ]
+}

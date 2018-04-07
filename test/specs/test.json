@@ -1,0 +1,40 @@
+{
+  "name": "test",
+  "exclude" : [".*derivatives.*"],
+  "entities": [
+    {
+      "name": "subject",
+      "pattern": "sub-(\\d+)",
+      "directory": "{{root}}/{subject}",
+      "dtype": "str"
+    },
+    {
+      "name": "session",
+      "pattern": "ses-0*(\\d+)",
+      "mandatory": false,
+      "directory": "{{root}}/{subject}/{session}",
+      "missing_value": "ses-1"
+    },
+    {
+      "name": "run",
+      "pattern": "run-(\\d+)",
+      "dtype": "int"
+    },
+    {
+      "name": "type",
+      "pattern": ".*_(.*?)\\."
+    },
+    {
+      "name": "task",
+      "pattern": "task-(.*?)_"
+    },
+    {
+      "name": "acquisition",
+      "pattern": "acq-(.*?)_"
+    },
+    {
+      "name": "bval",
+      "pattern": "(.*\\.bval)"
+    }
+  ]
+}

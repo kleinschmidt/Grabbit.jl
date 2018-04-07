@@ -1,0 +1,42 @@
+{
+  "name": "test_with_mapper",
+  "exclude" : [".*derivatives.*"],
+  "entities": [
+    {
+      "name": "subject",
+      "pattern": "sub-(\\d+)",
+      "directory": "{{root}}/{subject}"
+    },
+    {
+      "name": "session",
+      "pattern": "ses-0*(\\d+)",
+      "mandatory": false,
+      "directory": "{{root}}/{subject}/{session}",
+      "missing_value": "ses-1"
+    },
+    {
+      "name": "run",
+      "pattern": "run-0*(\\d+)"
+    },
+    {
+      "name": "type",
+      "pattern": ".*_(.*?)\\."
+    },
+    {
+      "name": "task",
+      "pattern": "task-(.*?)_"
+    },
+    {
+      "name": "acquisition",
+      "pattern": "acq-(.*?)_"
+    },
+    {
+      "name": "bval",
+      "pattern": "(.*\\.bval)"
+    },
+    {
+      "name": "hash",
+      "map_func": "hash_file"
+    }
+  ]
+}
