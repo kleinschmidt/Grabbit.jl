@@ -11,4 +11,4 @@ layout = Layout(root, config)
 
 # write your own tests here
 session1files = get(layout, session=1)
-basename.(get(layout, subject="01", session=1, ="bold"))
+basename.(get(layout, queries=Dict("type"=>["magnitude1", "bold"]), subject="01", session=1))

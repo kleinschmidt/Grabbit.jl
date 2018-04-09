@@ -231,11 +231,11 @@ function make_query(layout, filters)
     end
 end
 
-function Base.get(layout::Layout; kw...)
-    query = make_query(layout, kw)
+function Base.get(layout::Layout; queries=Dict(), kw...)
+    queries = merge!(Dict{Any,Any}(kw), queries)
+    query = make_query(layout, queries)
     filter(query, layout.files)
 end
-
 
 export
     Domain,
