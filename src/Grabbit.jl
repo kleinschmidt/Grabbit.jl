@@ -4,6 +4,7 @@ using Compat
 using Compat: @debug
 using JSON
 using DataStructures
+using ArgTest
 
 # grab files with structure directory/filenames
 # two steps:
@@ -75,6 +76,7 @@ mutable struct Domain{E}
     root::String
     parent::Union{Domain,Void}
     entities::Dict{String,E}
+    include                     # predicte function for whether to include
 end
 
 Domain(root::AbstractString, config::AbstractString) =
@@ -91,11 +93,24 @@ mutable struct Entity <: AbstractEntity
 end
 
 function Domain(config::Dict, parent=nothing)
+    @argtest(!all(haskey.(config, ["include", "exclude"])),
+             "Cannot specify both include and exclude regex")
+
+    include =
+        if haskey(config, "include")
+            f -> ismatch(Regex(config["include"], f))
+        elseif haskey(config, "exclude")
+            f -> !ismatch(Regex(config["exclude"], f))
+        else
+            f -> true
+        end
+    
     d = Domain{Entity}(config["name"],
                        config,
                        config["root"],
                        parent,
-                       Dict{String,Entity}())
+                       Dict{String,Entity}(),
+                       include)
 
     for e in config["entities"]
         e = Entity(e, d)
@@ -157,6 +172,7 @@ Base.dirname(f::File) = f.dirname
 mutable struct Layout
     root::String
     entities::OrderedDict{String,Entity}
+    mandatory::Set{Entity}
     domains::OrderedDict{String,Domain}
     files::Vector{File}
 end
@@ -173,6 +189,7 @@ function Layout(root::AbstractString, config::AbstractString)
     entities = domain.entities
     l = Layout(root,
                OrderedDict{String,Entity}("$(domain.name).$k"=>v for (k,v) in entities),
+               Set{Entity}(filter(e->e.mandatory, values(entities))),
                OrderedDict(domain.name=>domain),
                File[])
 
@@ -202,6 +219,10 @@ function parsedir!(layout::Layout, current, domain::Domain, entities::Dict{Strin
 
     return layout
 end
+
+################################################################################
+# Querying a layout
+################################################################################
 
 make_pattern(val::Number) = "0*$val"
 make_pattern(val::AbstractArray) = "(" * join(make_pattern.(val), "|") * ")"
