@@ -4,7 +4,8 @@ using Compat
 using Compat: @debug
 using JSON
 using DataStructures
-using ArgTest
+using ArgCheck
+using Missings
 
 # grab files with structure directory/filenames
 # two steps:
@@ -93,16 +94,22 @@ mutable struct Entity <: AbstractEntity
 end
 
 function Domain(config::Dict, parent=nothing)
-    @argtest(!all(haskey.(config, ["include", "exclude"])),
-             "Cannot specify both include and exclude regex")
+    @argcheck(!all(haskey.(config, ["include", "exclude"])),
+              "Cannot specify both include and exclude regex")
 
+    # this doesn't quite work: the short-circuiting is different for include and
+    # exclude (stop at first exclude match, keep at first include match).  maybe
+    # 3VL and reduce can make this work...  reducer is and. include ->
+    # true/false, exclude -> missing/false.  then short-circuits if fails to
+    # match include or matches exclude.  could end up with missing by the end,
+    # which we treat as true.
     include =
         if haskey(config, "include")
-            f -> ismatch(Regex(config["include"], f))
+            f -> ismatch(Regex(make_pattern(config["include"])), f)
         elseif haskey(config, "exclude")
-            f -> !ismatch(Regex(config["exclude"], f))
+            f -> ismatch(Regex(make_pattern(config["exclude"])), f) ? false : missing
         else
-            f -> true
+            f -> missing
         end
     
     d = Domain{Entity}(config["name"],
@@ -119,6 +126,12 @@ function Domain(config::Dict, parent=nothing)
 
     return d
 end
+
+_include(d::Domain, f::AbstractString) = d.include(f) & _include(d.parent, f)
+_include(::Void, f::AbstractString) = missing
+include(d::Domain, f::AbstractString) = (incl = _include(d, f); incl === missing ? true : incl)
+# curry
+include(d::Domain) = f -> include(d, f)
 
 function Entity(config::Dict, domain::Domain)
     name = config["name"]
@@ -201,7 +214,7 @@ end
 
 function parsedir!(layout::Layout, current, domain::Domain, entities::Dict{String,Entity})
     @debug "Parsing directory $current"
-    contents = joinpath.(current, readdir(current))
+    contents = joinpath.(current, filter(include(domain), readdir(current)))
     dirs = [x for x in contents if isdir(x)]
     files = [x for x in contents if !isdir(x)]
 
