@@ -149,6 +149,10 @@ function File(fn::AbstractString, domain::Domain, entities::Dict{String,Entity})
     return f
 end
 
+path(f::File) = f.path
+Base.basename(f::File) = f.filename
+Base.dirname(f::File) = f.dirname
+
 
 mutable struct Layout
     root::String
@@ -199,11 +203,43 @@ function parsedir!(layout::Layout, current, domain::Domain, entities::Dict{Strin
     return layout
 end
 
+make_pattern(val::Number) = Regex("0*$val")
+make_pattern(val::AbstractArray) = Regex("(" * join(getfield.(make_pattern.(val), :pattern), "|") * ")")
+make_pattern(val) = Regex("$val")
+
+function make_query(layout, filters)
+    @show filters = Dict(string(k)=>make_pattern(v) for (k,v) in filters)
+    function(f::File)
+        @debug "Querying file $(f.filename):"
+        for (name, filter) in filters
+            if !haskey(f.tags, name)
+                @debug "  ✘ no $name"
+                return false
+            elseif !ismatch(filter, f.tags[name])
+                @debug "  ✘ $name ($(f.tags[name])) ≠ $(filter.pattern)"
+                return false
+            else
+                @debug "  ✔ $name = $(filter.pattern)"
+            end
+        end
+        return true
+    end
+end
+
+function Base.get(layout::Layout; kw...)
+    query = make_query(layout, kw)
+    filter(query, layout.files)
+end
+
 
 export
     Domain,
     Entity,
     Layout,
-    File
+    File,
+    basename,
+    dirname,
+    path,
+    get
 
 end # module

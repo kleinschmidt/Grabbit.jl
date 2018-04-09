@@ -10,3 +10,5 @@ d = Domain(root, config)
 layout = Layout(root, config)
 
 # write your own tests here
+session1files = get(layout, session=1)
+basename.(get(layout, subject="01", session=1, ="bold"))
