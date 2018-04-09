@@ -1,5 +1,7 @@
 module Grabbit
 
+using Compat
+using Compat: @debug
 using JSON
 using DataStructures
 
@@ -113,6 +115,16 @@ end
 
 Base.show(io::IO, e::Entity) = println(io, "Entity $(e.domain.name).$(e.name)")
 
+function Base.match(entity::Entity, fn::AbstractString)
+    m = match(entity.pattern, fn)
+    if m !== nothing
+        m.captures[1]
+    elseif entity.mandatory
+        error("Mandatory entity $(entity.name) failed to match file $(f.path).")
+    else
+        nothing
+    end
+end
 
 mutable struct File
     path::String
@@ -122,8 +134,21 @@ mutable struct File
 end
 
 function File(fn::AbstractString, domain::Domain, entities::Dict{String,Entity})
-    
+    f = File(fn, basename(fn), dirname(fn), Dict())
+    @debug "Parsing file $fn"
+
+    for entity in values(entities)
+        m = match(entity, fn)
+        if m !== nothing
+            f.tags[entity.name] = m
+            @debug "✔ $(entity.name): $m"
+        else
+            @debug "✘ $(entity.name)"
+        end
+    end
+    f
 end
+
 
 mutable struct Layout
     root::String
@@ -154,11 +179,17 @@ function Layout(root::AbstractString, config::AbstractString)
 end
 
 function parsedir!(layout::Layout, current, domain::Domain, entities::Dict{String,Entity})
-    contents = readdir(current)
-    dirs = [x for x in contents if isdir(joinpath(current,x))]
-    files = [x for x in contents if !isdir(joinpath(current,x))]
+    contents = joinpath.(current, readdir(current))
+    dirs = [x for x in contents if isdir(x)]
+    files = [x for x in contents if !isdir(x)]
 
+    for config in filter(is_config(layout), files)
+        error("Additional config files not supported yet.")
+    end
     
+    for file in files
+        push!(layout.files, File(file, domain, entities))
+    end
 end
 
 
