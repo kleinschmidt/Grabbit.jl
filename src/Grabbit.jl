@@ -203,12 +203,17 @@ function parsedir!(layout::Layout, current, domain::Domain, entities::Dict{Strin
     return layout
 end
 
-make_pattern(val::Number) = Regex("0*$val")
-make_pattern(val::AbstractArray) = Regex("(" * join(getfield.(make_pattern.(val), :pattern), "|") * ")")
-make_pattern(val) = Regex("$val")
+make_pattern(val::Number) = "0*$val"
+make_pattern(val::AbstractArray) = "(" * join(make_pattern.(val), "|") * ")"
+make_pattern(val) = "$val"
+
+function make_regex(val, regex_search=false)
+    pattern = make_pattern(val)
+    regex_search ? Regex(pattern) : Regex("^$pattern\$")
+end
 
 function make_query(layout, filters)
-    @show filters = Dict(string(k)=>make_pattern(v) for (k,v) in filters)
+    filters = Dict(string(k)=>make_regex(v) for (k,v) in filters)
     function(f::File)
         @debug "Querying file $(f.filename):"
         for (name, filter) in filters
