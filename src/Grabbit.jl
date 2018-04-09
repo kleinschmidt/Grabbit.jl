@@ -118,11 +118,11 @@ Base.show(io::IO, e::Entity) = println(io, "Entity $(e.domain.name).$(e.name)")
 function Base.match(entity::Entity, fn::AbstractString)
     m = match(entity.pattern, fn)
     if m !== nothing
-        m.captures[1]
+        return m.captures[1]
     elseif entity.mandatory
         error("Mandatory entity $(entity.name) failed to match file $(f.path).")
     else
-        nothing
+        return nothing
     end
 end
 
@@ -135,18 +135,18 @@ end
 
 function File(fn::AbstractString, domain::Domain, entities::Dict{String,Entity})
     f = File(fn, basename(fn), dirname(fn), Dict())
-    @debug "Parsing file $fn"
+    @debug "  Parsing file $fn"
 
     for entity in values(entities)
         m = match(entity, fn)
         if m !== nothing
             f.tags[entity.name] = m
-            @debug "✔ $(entity.name): $m"
+            @debug "    ✔ $(entity.name): $m"
         else
-            @debug "✘ $(entity.name)"
+            @debug "    ✘ $(entity.name)"
         end
     end
-    f
+    return f
 end
 
 
@@ -179,6 +179,7 @@ function Layout(root::AbstractString, config::AbstractString)
 end
 
 function parsedir!(layout::Layout, current, domain::Domain, entities::Dict{String,Entity})
+    @debug "Parsing directory $current"
     contents = joinpath.(current, readdir(current))
     dirs = [x for x in contents if isdir(x)]
     files = [x for x in contents if !isdir(x)]
@@ -190,6 +191,12 @@ function parsedir!(layout::Layout, current, domain::Domain, entities::Dict{Strin
     for file in files
         push!(layout.files, File(file, domain, entities))
     end
+
+    for dir in dirs
+        parsedir!(layout, dir, domain, entities)
+    end
+
+    return layout
 end
 
 
