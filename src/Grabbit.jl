@@ -6,6 +6,7 @@ using JSON
 using DataStructures
 using ArgCheck
 using Missings
+using Base.Iterators
 
 # grab files with structure directory/filenames
 # two steps:
