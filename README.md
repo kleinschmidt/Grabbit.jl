@@ -7,3 +7,12 @@
 [![codecov.io](http://codecov.io/github/kleinschmidt/Grabbit.jl/coverage.svg?branch=master)](http://codecov.io/github/kleinschmidt/Grabbit.jl?branch=master)
 
 Based on python [grabbit](https://github.com/grabbles/grabbit).
+
+# TODO
+
+- [ ] tests
+- [ ] multiple config files/nested domains
+- [ ] kw args in `Layout` constructor
+- [ ] query entities (e.g., get all sessions)
+- [ ] path patterns for entities and writeable
+- [ ] more julian interface (return iterators and use filter?)
