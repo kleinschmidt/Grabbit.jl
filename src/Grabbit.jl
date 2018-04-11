@@ -192,9 +192,27 @@ function Base.show(io::IO, layout::Layout)
     files = ItemQuantity( length(layout.files), "file")
     print(io, "Layout of $files in $(layout.root)")
     for (domain_name, domain) in layout.domains
-        println(io, "\n  Domain \"$domain_name\":")
+        print(io, "\n  Domain \"$domain_name\":")
         maxlen = maximum(length(k) for k in keys(domain.entities))
-        join(io, ["    " * rpad("\"$k\"", maxlen+3) * " => $(e.pattern)" for (k,e) in domain.entities], "\n")
+        for (k, e) in domain.entities
+            print(io, "\n    ")
+            print(io, rpad("\"$k\"", maxlen+3))
+            chars_left = displaysize(io)[2] - (maxlen+3) - 4
+            reprs = []
+            for v in e.values
+                r = repr(v)
+                if chars_left < length(r)+5
+                    push!(reprs, "…")
+                    break
+                else
+                    push!(reprs, repr(v))
+                    chars_left -= length(r)+2
+                end
+            end
+            print(io, "[")
+            join(io, reprs, ", ")
+            print(io, "]")
+        end
     end
 end
 
