@@ -1,5 +1,6 @@
 using Compat
 using Grabbit
+using Grabbit: parse_config
 using Base.Test
 
 
@@ -10,7 +11,7 @@ using Base.Test
     config_fn = joinpath(Pkg.dir("Grabbit"), "test", "specs", "test.json")
     root = joinpath(Pkg.dir("Grabbit"), "test", "data", "7t_trt")
 
-    config = Grabbit.parse_config(root, config_fn)
+    config = parse_config(root, config_fn)
 
     @testset "Domain" begin
         d = Domain(config)
@@ -44,10 +45,17 @@ using Base.Test
     end
 
 
-    @testset "excludes" begin
+    @testset "excludes/includes" begin
         layout = Layout(root, config_fn)
-        @test !any(ismatch.(r"derivatives", dirname.(get(layout))))
+        @test !any(occursin.(r"derivatives", dirname.(get(layout))))
 
+        config_incl = parse_config(root,
+                                   joinpath(Pkg.dir("Grabbit"),
+                                            "test",
+                                            "specs",
+                                            "test_include.json"))
+        layout_incl = Layout(config_incl)
+        @test !any(occursin.(r"models/excluded_model.json", path.(get(layout_incl))))
     end
     
 end
