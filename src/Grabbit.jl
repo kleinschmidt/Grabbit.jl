@@ -188,6 +188,16 @@ mutable struct Layout
     config_filenames::Set{String}
 end
 
+function Base.show(io::IO, layout::Layout)
+    files = length(layout.files)
+    domains = length(layout.domains)
+    entities = length(layout.entities)
+    print(io, "Layout of $(layout.root): " *
+          "$(length(layout.files)) files " *
+          "with $(length(layout.entities)) entities " *
+          "in $(length(layout.domains)) domain"
+end
+
 # placeholder
 is_config(l::Layout, filename::AbstractString) = false
 is_config(l::Layout) = f -> is_config(l, f)
