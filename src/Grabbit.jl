@@ -1,7 +1,7 @@
 module Grabbit
 
 using Compat
-using Compat: @debug
+using Compat: @debug, Printf
 using JSON
 using DataStructures
 using ArgCheck
@@ -76,7 +76,7 @@ mutable struct Domain{E}
     name::String
     config::Dict
     root::String
-    parent::Union{Domain,Void}
+    parent::Union{Domain,Compat.Nothing}
     entities::Dict{String,E}
     include                     # predicte function for whether to include
 end
@@ -113,15 +113,15 @@ end
 
 make_include_predicate(config) =
     if haskey(config, "include")
-        f -> ismatch(Regex(make_pattern(config["include"])), f)
+        f -> Compat.occursin(Regex(make_pattern(config["include"])), f)
     elseif haskey(config, "exclude")
-        f -> ismatch(Regex(make_pattern(config["exclude"])), f) ? false : missing
+        f -> Compat.occursin(Regex(make_pattern(config["exclude"])), f) ? false : missing
     else
         f -> missing
     end
 
 _include(d::Domain, f::AbstractString) = d.include(f) & _include(d.parent, f)
-_include(::Void, f::AbstractString) = missing
+_include(::Compat.Nothing, f::AbstractString) = missing
 include(d::Domain, f::AbstractString) = (incl = _include(d, f); incl === missing ? true : incl)
 # curry
 include(d::Domain) = f -> include(d, f)
@@ -312,7 +312,7 @@ function make_query(layout, filters)
             if !haskey(f.tags, name)
                 @debug "  ✘ no $name"
                 return false
-            elseif !ismatch(filter, f.tags[name])
+            elseif !Compat.occursin(filter, f.tags[name])
                 @debug "  ✘ $name ($(f.tags[name])) ≠ $(filter.pattern)"
                 return false
             else
