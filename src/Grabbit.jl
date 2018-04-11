@@ -93,28 +93,13 @@ end
 function Domain(config::Dict, parent=nothing)
     @argcheck(!all(haskey.(config, ["include", "exclude"])),
               "Cannot specify both include and exclude regex")
-
-    # this doesn't quite work: the short-circuiting is different for include and
-    # exclude (stop at first exclude match, keep at first include match).  maybe
-    # 3VL and reduce can make this work...  reducer is and. include ->
-    # true/false, exclude -> missing/false.  then short-circuits if fails to
-    # match include or matches exclude.  could end up with missing by the end,
-    # which we treat as true.
-    include =
-        if haskey(config, "include")
-            f -> ismatch(Regex(make_pattern(config["include"])), f)
-        elseif haskey(config, "exclude")
-            f -> ismatch(Regex(make_pattern(config["exclude"])), f) ? false : missing
-        else
-            f -> missing
-        end
     
     d = Domain{Entity}(config["name"],
                        config,
                        config["root"],
                        parent,
                        Dict{String,Entity}(),
-                       include)
+                       make_include_predicate(config))
 
     for e in config["entities"]
         e = Entity(e, d)
@@ -123,6 +108,15 @@ function Domain(config::Dict, parent=nothing)
 
     return d
 end
+
+make_include_predicate(config) =
+    if haskey(config, "include")
+        f -> ismatch(Regex(make_pattern(config["include"])), f)
+    elseif haskey(config, "exclude")
+        f -> ismatch(Regex(make_pattern(config["exclude"])), f) ? false : missing
+    else
+        f -> missing
+    end
 
 _include(d::Domain, f::AbstractString) = d.include(f) & _include(d.parent, f)
 _include(::Void, f::AbstractString) = missing
