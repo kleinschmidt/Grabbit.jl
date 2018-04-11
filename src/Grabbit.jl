@@ -89,6 +89,7 @@ mutable struct Entity <: AbstractEntity
     pattern::Regex
     domain::Domain
     mandatory::Bool
+    values::OrderedSet
 end
 
 function Domain(config::Dict, parent=nothing)
@@ -129,16 +130,18 @@ function Entity(config::Dict, domain::Domain)
     name = config["name"]
     pattern = Regex(config["pattern"])
     mandatory = convert(Bool, get(config, "mandatory", false))
-    e = Entity(name, pattern, domain, mandatory)
+    e = Entity(name, pattern, domain, mandatory, OrderedSet())
     return e
 end
 
 Base.show(io::IO, e::Entity) = println(io, "Entity $(e.domain.name).$(e.name)")
 
-function Base.match(entity::Entity, fn::AbstractString)
+function match!(entity::Entity, fn::AbstractString)
     m = match(entity.pattern, fn)
     if m !== nothing
-        return m.captures[1]
+        value = m.captures[1]
+        push!(entity.values, value)
+        return value
     elseif entity.mandatory
         error("Mandatory entity $(entity.name) failed to match file $(f.path).")
     else
@@ -160,7 +163,7 @@ function File(fn::AbstractString, domain::Domain, entities::Dict{String,Entity})
     @debug "  Parsing file $fn"
 
     for entity in values(entities)
-        m = match(entity, fn)
+        m = match!(entity, fn)
         if m !== nothing
             f.tags[entity.name] = m
             @debug "    ✔ $(entity.name): $m"
