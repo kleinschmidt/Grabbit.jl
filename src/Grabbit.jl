@@ -211,7 +211,7 @@ function Layout(root::AbstractString, config::AbstractString)
     entities = domain.entities
 
     # filenames to look for inside tree to create new domains
-    config_files = get(config, "config_filename", String[])
+    config_files = get(config, "config_filename", [])
     
     l = Layout(root,
                OrderedDict{String,Entity}("$(domain.name).$k"=>v for (k,v) in entities),
