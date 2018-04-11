@@ -1,4 +1,4 @@
-
+using Compat
 using Grabbit
 using Base.Test
 

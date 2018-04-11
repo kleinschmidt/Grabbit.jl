@@ -1,7 +1,8 @@
 module Grabbit
 
 using Compat
-using Compat: @debug, Printf
+using Compat: @debug
+using Compat.Printf
 using JSON
 using DataStructures
 using ArgCheck
@@ -93,7 +94,7 @@ mutable struct Entity <: AbstractEntity
 end
 
 function Domain(config::Dict, parent=nothing)
-    @argcheck(!all(haskey.(config, ["include", "exclude"])),
+    @argcheck(!all(haskey.(Ref(config), ["include", "exclude"])),
               "Cannot specify both include and exclude regex")
     
     d = Domain{Entity}(config["name"],
