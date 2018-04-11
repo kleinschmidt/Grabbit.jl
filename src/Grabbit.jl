@@ -80,9 +80,6 @@ mutable struct Domain{E}
     include                     # predicte function for whether to include
 end
 
-Domain(root::AbstractString, config::AbstractString) =
-    Domain(merge(Dict("root"=>root), JSON.parsefile(joinpath(root, config))))
-
 Base.show(io::IO, d::Domain) = println(io, "Domain $(d.name) ($(d.root))")
 
 
@@ -188,7 +185,7 @@ mutable struct Layout
     mandatory::Set{Entity}
     domains::OrderedDict{String,Domain}
     files::Vector{File}
-    config_filenames
+    config_filenames::Set{String}
 end
 
 # placeholder
@@ -198,20 +195,42 @@ is_config(l::Layout) = f -> is_config(l, f)
 exclude(::Layout, dir::AbstractString) = false
 include(::Layout, dir::AbstractString) = true
 
+"""
+    parse_config(root, config)
+
+Read in config JSON file (relative to root), adding a "root" key if it's missing
+"""
+parse_config(root::AbstractString, config::AbstractString) =
+    merge(Dict("root"=>root), JSON.parsefile(joinpath(root, config)))
+
+
 function Layout(root::AbstractString, config::AbstractString)
-    domain = Domain(root, config)
+    config = parse_config(root, config)
+
+    domain = Domain(config)
     entities = domain.entities
+
+    # filenames to look for inside tree to create new domains
+    config_files = get(config, "config_filename", String[])
+    
     l = Layout(root,
                OrderedDict{String,Entity}("$(domain.name).$k"=>v for (k,v) in entities),
                Set{Entity}(e for (k, e) in entities if e.mandatory),
                OrderedDict(domain.name=>domain),
-               File[])
+               File[],
+               config_files)
 
     # walk dir top down
     parsedir!(l, root, domain, entities)
 
     return l
 end
+
+Layout(r, e, m, d, f, config_files::AbstractString) =
+    Layout(r, e, m, d, f, Set{String}((config_files, )))
+Layout(r, e, m, d, f, config_files::AbstractArray) =
+    Layout(r, e, m, d, f, Set{String}(string(f) for f in config_files))
+
 
 function parsedir!(layout::Layout, current, domain::Domain, entities::Dict{String,Entity})
     @debug "Parsing directory $current"
