@@ -6,6 +6,7 @@ using JSON
 using DataStructures
 using ArgCheck
 using Missings
+using EnglishText
 
 # grab files with structure directory/filenames
 # two steps:
@@ -80,7 +81,7 @@ mutable struct Domain{E}
     include                     # predicte function for whether to include
 end
 
-Base.show(io::IO, d::Domain) = println(io, "Domain $(d.name) ($(d.root))")
+Base.show(io::IO, d::Domain) = print(io, "Domain $(d.name) ($(d.root))")
 
 
 mutable struct Entity <: AbstractEntity
@@ -152,6 +153,8 @@ mutable struct File
     tags::Dict
 end
 
+Base.show(io::IO, f::File) = show(io, f.path)
+
 function File(fn::AbstractString, domain::Domain, entities::Dict{String,Entity})
     f = File(fn, basename(fn), dirname(fn), Dict())
     @debug "  Parsing file $fn"
@@ -183,13 +186,20 @@ mutable struct Layout
 end
 
 function Base.show(io::IO, layout::Layout)
-    files = length(layout.files)
-    domains = length(layout.domains)
-    entities = length(layout.entities)
-    print(io, "Layout of $(layout.root): " *
-          "$(length(layout.files)) files " *
-          "with $(length(layout.entities)) entities " *
-          "in $(length(layout.domains)) domain"
+    files = ItemQuantity( length(layout.files), "file")
+    print(io, "Layout of $files in $(layout.root)")
+    for (domain_name, domain) in layout.domains
+        println(io, "\n  Domain \"$domain_name\":")
+        maxlen = maximum(length(k) for k in keys(domain.entities))
+        join(io, ["    " * rpad("\"$k\"", maxlen+3) * " => $(e.pattern)" for (k,e) in domain.entities], "\n")
+    end
+end
+
+function Base.showcompact(io::IO, layout::Layout)
+    files = ItemQuantity( length(layout.files), "file")
+    domains = ItemQuantity(length(layout.domains), "domain")
+    entities = ItemQuantity(length(layout.entities), "entity")
+    print(io, "Layout of $files in $(layout.root) ($entities in $domains)")
 end
 
 # placeholder
