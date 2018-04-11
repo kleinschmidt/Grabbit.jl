@@ -202,7 +202,7 @@ function Layout(root::AbstractString, config::AbstractString)
     entities = domain.entities
     l = Layout(root,
                OrderedDict{String,Entity}("$(domain.name).$k"=>v for (k,v) in entities),
-               Set{Entity}(filter(e->e.mandatory, values(entities))),
+               Set{Entity}(e for (k, e) in entities if e.mandatory),
                OrderedDict(domain.name=>domain),
                File[])
 
@@ -214,9 +214,9 @@ end
 
 function parsedir!(layout::Layout, current, domain::Domain, entities::Dict{String,Entity})
     @debug "Parsing directory $current"
-    contents = joinpath.(current, filter(include(domain), readdir(current)))
-    dirs = [x for x in contents if isdir(x)]
-    files = [x for x in contents if !isdir(x)]
+    contents = [joinpath(current, x) for x in readdir(current) if include(domain, x)]
+    dirs = filter(isdir, contents)
+    files = filter(!isdir, contents)
 
     for config in filter(is_config(layout), files)
         error("Additional config files not supported yet.")
