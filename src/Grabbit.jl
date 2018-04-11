@@ -214,9 +214,10 @@ parse_config(root::AbstractString, config::AbstractString) =
     merge(Dict("root"=>root), JSON.parsefile(joinpath(root, config)))
 
 
-function Layout(root::AbstractString, config::AbstractString)
-    config = parse_config(root, config)
+Layout(root::AbstractString, config::AbstractString) = Layout(parse_config(root, config))
 
+function Layout(config::Dict)
+    root = config["root"]
     domain = Domain(config)
     entities = domain.entities
 
@@ -240,7 +241,6 @@ Layout(r, e, m, d, f, config_files::AbstractString) =
     Layout(r, e, m, d, f, Set{String}((config_files, )))
 Layout(r, e, m, d, f, config_files::AbstractArray) =
     Layout(r, e, m, d, f, Set{String}(string(f) for f in config_files))
-
 
 function parsedir!(layout::Layout, current, domain::Domain, entities::Dict{String,Entity})
     @debug "Parsing directory $current"
