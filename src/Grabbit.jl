@@ -188,6 +188,7 @@ mutable struct Layout
     mandatory::Set{Entity}
     domains::OrderedDict{String,Domain}
     files::Vector{File}
+    config_filenames
 end
 
 # placeholder
@@ -217,6 +218,9 @@ function parsedir!(layout::Layout, current, domain::Domain, entities::Dict{Strin
     contents = [joinpath(current, x) for x in readdir(current) if include(domain, x)]
     dirs = filter(isdir, contents)
     files = filter(!isdir, contents)
+
+    configs = filter(is_config(layout), files)
+    filter!(!is_config(layout), files)
 
     for config in filter(is_config(layout), files)
         error("Additional config files not supported yet.")
