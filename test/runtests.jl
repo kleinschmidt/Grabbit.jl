@@ -44,6 +44,18 @@ using Base.Test
 
     end
 
+    @testset "Default entities" begin
+        @testset "extension" begin
+            layout = Layout(config)
+            @test !isempty(get(layout, extension="json"))
+            @test length(get(layout, subject=1, session=1, run=1, extension="json")) == 1
+            @test length(get(layout, subject=1, extension="nii.gz")) == 20
+            @test isempty(get(layout, extension="nii"))
+            @test isempty(get(layout, extension=["txt", "rtf"]))
+            @test length(get(layout, subject=1, extension="json")) == 4
+            @test length(get(layout, subject=1, extension=["nii.gz", "json"])) == 24
+        end
+    end
 
     @testset "excludes/includes" begin
         layout = Layout(root, config_fn)

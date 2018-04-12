@@ -92,6 +92,15 @@ mutable struct Entity <: AbstractEntity
     values::OrderedSet
 end
 
+
+const DEFAULT_ENTITIES =
+    Dict("extension" => Entity("extension",
+                               r"\.([^/]*?)$",
+                               false,
+                               OrderedSet()))
+
+
+
 function Domain(config::Dict, parent=nothing)
     @argcheck(!all(haskey.(Ref(config), ["include", "exclude"])),
               "Cannot specify both include and exclude regex")
@@ -134,7 +143,7 @@ function Entity(config::Dict)
     return e
 end
 
-Base.show(io::IO, e::Entity) = println(io, "Entity $(e.domain.name).$(e.name)")
+Base.show(io::IO, e::Entity) = println(io, "Entity $(e.name)")
 
 function match!(entity::Entity, fn::AbstractString)
     m = match(entity.pattern, fn)
@@ -241,7 +250,7 @@ Layout(root::AbstractString, config::AbstractString) = Layout(parse_config(root,
 function Layout(config::Dict)
     root = config["root"]
     domain = Domain(config)
-    entities = domain.entities
+    entities = merge(DEFAULT_ENTITIES, domain.entities)
 
     # filenames to look for inside tree to create new domains
     config_files = get(config, "config_filename", [])
