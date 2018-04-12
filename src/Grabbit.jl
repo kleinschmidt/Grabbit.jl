@@ -228,9 +228,6 @@ end
 is_config(l::Layout, filename::AbstractString) = false
 is_config(l::Layout) = f -> is_config(l, f)
 
-exclude(::Layout, dir::AbstractString) = false
-include(::Layout, dir::AbstractString) = true
-
 """
     parse_config(root, config)
 
