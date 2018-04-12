@@ -93,14 +93,6 @@ mutable struct Entity <: AbstractEntity
 end
 
 
-const DEFAULT_ENTITIES =
-    Dict("extension" => Entity("extension",
-                               r"\.([^/]*?)$",
-                               false,
-                               OrderedSet()))
-
-
-
 function Domain(config::Dict, parent=nothing)
     @argcheck(!all(haskey.(Ref(config), ["include", "exclude"])),
               "Cannot specify both include and exclude regex")
@@ -244,19 +236,26 @@ Read in config JSON file (relative to root), adding a "root" key if it's missing
 parse_config(root::AbstractString, config::AbstractString) =
     merge(Dict("root"=>root), JSON.parsefile(joinpath(root, config)))
 
-
 Layout(root::AbstractString, config::AbstractString) = Layout(parse_config(root, config))
+
+
+const DEFAULT_ENTITIES =
+    OrderedDict("extension" => Entity("extension",
+                               r"\.([^/]*?)$",
+                               false,
+                               OrderedSet()))
 
 function Layout(config::Dict)
     root = config["root"]
     domain = Domain(config)
-    entities = merge(DEFAULT_ENTITIES, domain.entities)
+    entities = merge(Dict(DEFAULT_ENTITIES), domain.entities)
 
     # filenames to look for inside tree to create new domains
     config_files = get(config, "config_filename", [])
     
     l = Layout(root,
-               OrderedDict{String,Entity}("$(domain.name).$k"=>v for (k,v) in entities),
+               merge(DEFAULT_ENTITIES,
+                     OrderedDict{String,Entity}("$(domain.name).$k"=>v for (k,v) in entities)),
                Set{Entity}(e for (k, e) in entities if e.mandatory),
                OrderedDict(domain.name=>domain),
                File[],
