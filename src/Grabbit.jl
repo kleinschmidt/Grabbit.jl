@@ -175,6 +175,7 @@ function File(fn::AbstractString, domain::Domain, entities::Dict{String,Entity})
     return f
 end
 
+tags(f::File) = f.tags
 path(f::File) = f.path
 Base.basename(f::File) = f.filename
 Base.dirname(f::File) = f.dirname
@@ -342,6 +343,7 @@ export
     basename,
     dirname,
     path,
-    get
+    get,
+    tags
 
 end # module
