@@ -88,7 +88,6 @@ Base.show(io::IO, d::Domain) = print(io, "Domain $(d.name) ($(d.root))")
 mutable struct Entity <: AbstractEntity
     name::String
     pattern::Regex
-    domain::Domain
     mandatory::Bool
     values::OrderedSet
 end
@@ -105,7 +104,7 @@ function Domain(config::Dict, parent=nothing)
                        make_include_predicate(config))
 
     for e in config["entities"]
-        e = Entity(e, d)
+        e = Entity(e)
         d.entities[e.name] = e
     end
 
@@ -127,11 +126,11 @@ include(d::Domain, f::AbstractString) = (incl = _include(d, f); incl === missing
 # curry
 include(d::Domain) = f -> include(d, f)
 
-function Entity(config::Dict, domain::Domain)
+function Entity(config::Dict)
     name = config["name"]
     pattern = Regex(config["pattern"])
     mandatory = convert(Bool, get(config, "mandatory", false))
-    e = Entity(name, pattern, domain, mandatory, OrderedSet())
+    e = Entity(name, pattern, mandatory, OrderedSet())
     return e
 end
 
