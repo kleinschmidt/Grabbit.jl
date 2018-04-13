@@ -1,3 +1,5 @@
+__precompile__()
+
 module Grabbit
 
 using Compat
@@ -70,39 +72,36 @@ using EnglishText
 #
 # query by entity name, optionally with domain qualification (as domains kw)
 
-
-abstract type AbstractEntity end
-
-mutable struct Domain{E}
-    name::String
-    config::Dict
-    root::String
-    parent::Union{Domain,Compat.Nothing}
-    entities::Dict{String,E}
-    include                     # predicte function for whether to include
-end
-
-Base.show(io::IO, d::Domain) = print(io, "Domain $(d.name) ($(d.root))")
-
-
-mutable struct Entity <: AbstractEntity
+mutable struct Entity
     name::String
     pattern::Regex
     mandatory::Bool
     values::OrderedSet
 end
 
+mutable struct Domain
+    name::String
+    config::Dict
+    root::String
+    parent::Union{Domain,Compat.Nothing}
+    entities::Dict{String,Entity}
+    include                     # predicte function for whether to include
+end
+
+Base.show(io::IO, d::Domain) = print(io, "Domain $(d.name) ($(d.root))")
+
+
 
 function Domain(config::Dict, parent=nothing)
     @argcheck(!all(haskey.(Ref(config), ["include", "exclude"])),
               "Cannot specify both include and exclude regex")
     
-    d = Domain{Entity}(config["name"],
-                       config,
-                       config["root"],
-                       parent,
-                       Dict{String,Entity}(),
-                       make_include_predicate(config))
+    d = Domain(config["name"],
+               config,
+               config["root"],
+               parent,
+               Dict{String,Entity}(),
+               make_include_predicate(config))
 
     for e in config["entities"]
         e = Entity(e)
