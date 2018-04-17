@@ -344,6 +344,12 @@ function tags(layout)
     return ts
 end
 
+function Base.get(layout::Layout, target::AbstractString)
+    reduce(union!, OrderedSet(), e.values for (k,e) in layout.entities if e.name==target)
+end
+
+Base.get(file::File, target::AbstractString) = file.tags[target]
+
 export
     Domain,
     Entity,
