@@ -334,6 +334,16 @@ function Base.get(layout::Layout; queries=Dict(), kw...)
     filter(query, layout.files)
 end
 
+function tags(layout)
+    # get all the tags, in teh form of a Dict(entity=>values)
+    ts = Dict()
+    for (k, e) in layout.entities
+        vals = get!(ts, e.name, OrderedSet())
+        union!(vals, e.values)
+    end
+    return ts
+end
+
 export
     Domain,
     Entity,
