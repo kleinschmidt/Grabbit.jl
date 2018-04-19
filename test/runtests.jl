@@ -27,7 +27,8 @@ using Base.Test
             [@sprintf("%02d", i) for i in 1:10]
         @test any(!haskey(f.tags, "acquisition") for f in session1files)
 
-        @test get(layout, queries = Dict("session"=>1)) == session1files
+        # use second arg Dict with queries equivalent to kw args
+        @test get(layout, Dict("session"=>1)) == session1files
 
         subj12 = get(layout, subject = [1,2])
         @test all(haskey(f.tags, "subject") for f in subj12)
@@ -40,8 +41,11 @@ using Base.Test
         @test subj12 == get(layout, subject = [2, 1])
         @test subj12 == get(layout, subject = [1, 2, 1])
 
-        basename.(get(layout, queries=Dict("type"=>["magnitude1", "bold"]), subject="01", session=1))
-
+        fs = get(layout, Dict("type"=>["magnitude1", "bold"]), subject="01", session=1)
+        @test isempty(setdiff(unique(get.(fs, "type")), ["magnitude1", "bold"]))
+        @test all(get.(fs, "subject") .== "01")
+        @test all(get.(fs, "session") .== "1")
+        @test all(get.(fs, "extension") .== "nii.gz")
     end
 
     @testset "Default entities" begin
