@@ -334,6 +334,8 @@ function Base.get(layout::Layout, queries::Dict=Dict(); kw...)
     filter(query, layout.files)
 end
 
+Base.get(layout::Layout, r::Regex) = [f for f in layout.files if ismatch(r, path(f))]
+
 function tags(layout)
     # get all the tags, in teh form of a Dict(entity=>values)
     ts = Dict()
